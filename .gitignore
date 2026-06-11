@@ -1,3 +1,6 @@
 .venv
+__pycache__/
 data/creditcard.csv
 data/*.csv
+app/users.json
+.cloudflared.log

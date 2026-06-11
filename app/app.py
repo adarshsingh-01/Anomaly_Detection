@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from auth import init_session, logout, render_auth_page
+
 APP_DIR = Path(__file__).resolve().parent
 MODEL_DIR = APP_DIR.parent / "notebook"
 
@@ -126,6 +128,15 @@ st.markdown(
     }
     .model-stat span:first-child { color: #64748b; }
     .model-stat span:last-child { color: #e2e8f0; font-weight: 600; }
+
+    .auth-wrap { max-width: 720px; margin: 2rem auto 1rem; }
+    .auth-header {
+        background: linear-gradient(135deg, rgba(30,58,95,0.9) 0%, rgba(15,23,42,0.95) 100%);
+        border: 1px solid rgba(56,189,248,0.2);
+        border-radius: 20px; padding: 2rem 2.25rem; text-align: center;
+    }
+    .auth-header h1 { color: #f8fafc; font-size: 1.75rem; font-weight: 800; margin: 0 0 0.5rem; }
+    .auth-header p { color: #94a3b8; margin: 0; font-size: 0.95rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -283,6 +294,11 @@ def build_charts(result, total, anomaly_count, fraud_count):
     return fig
 
 
+init_session()
+if not st.session_state.authenticated:
+    render_auth_page()
+    st.stop()
+
 try:
     model, model_rf, scaler, metadata = load_artifacts()
 except FileNotFoundError as exc:
@@ -297,6 +313,14 @@ expected_features = list(metadata.get("features", scaler.feature_names_in_))
 with st.sidebar:
     st.markdown("## 🛡️ ShieldPay")
     st.caption("Enterprise fraud screening")
+    st.markdown(
+        f"**{st.session_state.user_name}**  \n"
+        f"<span style='color:#64748b;font-size:0.8rem;'>{st.session_state.user_email}</span>",
+        unsafe_allow_html=True,
+    )
+    if st.button("Logout", use_container_width=True):
+        logout()
+        st.rerun()
     st.divider()
 
     st.markdown("**Detection Settings**")
